@@ -1,4 +1,6 @@
-﻿using System.Data;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 
 namespace Customer_API.Models
@@ -7,37 +9,46 @@ namespace Customer_API.Models
     {
         public Response GetAllCustomer(SqlConnection connection)
         {
+            // Create a new Response object to hold the results
             Response response = new Response();
+            // 1. Prepare the SQL command:
             SqlDataAdapter da = new SqlDataAdapter("Select * from customers", connection);
+            // 2. Execute the query and fill a DataTable:
             DataTable dt = new DataTable();
+            //Create a list to store Customer objects:
             List<Customer> lstCustomer = new List<Customer>();
             da.Fill(dt);
 
+            // 3. Check if any data was retrieved:
             if (dt.Rows.Count > 0)
             {
+                // 3.1 Loop through each row in the DataTable:
                 for (int i = 0; i < dt.Rows.Count; i++)
                 {
                     Customer customer = new Customer();
+                    // 3.2 Extract data from the DataRow using safe casting:
                     customer.customer_id = Convert.ToInt32(dt.Rows[i]["customer_id"]);
                     customer.customer_name = Convert.ToString(dt.Rows[i]["customer_name"]);
                     customer.address = Convert.ToString(dt.Rows[i]["address"]);
                     customer.city = Convert.ToString(dt.Rows[i]["city"]);
                     customer.state = Convert.ToString(dt.Rows[i]["state"]);
                     customer.zip_code = Convert.ToString(dt.Rows[i]["zip_code"]);
+                    // 3.3 Add the Customer object to the list:
                     lstCustomer.Add(customer);
                 }
             }
             if (lstCustomer.Count > 0)
             {
-                response.StatusCode = 200;
+                // 4. Set successful response data
+                response.StatusCode = 200;// HTTP status code for found
                 response.StatusMessage = "Data Found";
                 response.ListCustomer = lstCustomer;
             }
             else
             {
-                response.StatusCode = 100;
+                response.StatusCode = 100; // HTTP status code for not found
                 response.StatusMessage = "No Data Found";
-                response.ListCustomer = null;
+                response.ListCustomer = null; // Set to null to avoid unnecessary data in the response
             }
 
             return response;
